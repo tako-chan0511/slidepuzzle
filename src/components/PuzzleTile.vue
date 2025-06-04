@@ -1,48 +1,57 @@
 <!-- src/components/PuzzleTile.vue -->
 <template>
   <div
-    class="puzzle-tile"
-    :class="{ empty: tile.value === 0 }"
-    @click="onClick"
+    :class="['tile', { empty: tile.value === 0 }]"
+    @click="() => $emit('click-tile', tile)"
   >
-    <!-- 値が 0（空マス）の場合は何も表示しない -->
+    <!-- 空タイルは中身を表示しない -->
     <span v-if="tile.value !== 0">{{ tile.value }}</span>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { defineProps, defineEmits } from "vue";
 import type { Tile } from "@/types";
+import { defineProps, defineEmits } from "vue";
 
-const props = defineProps<{
-  tile: Tile;
-}>();
-
+const props = defineProps<{ tile: Tile }>();
 const emits = defineEmits<{
   (e: "click-tile", tile: Tile): void;
 }>();
-
-function onClick() {
-  if (props.tile.value === 0) return;
-  emits("click-tile", props.tile);
-}
 </script>
 
 <style scoped>
-.puzzle-tile {
-  width: 80px;
-  height: 80px;
-  border: 1px solid #333;
+.tile {
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 1.5rem;
-  cursor: pointer;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  /* 数字タイルの背景色 */
+  background-color: #cfe8fc; /* 淡いライトブルー */
+  color: #333; /* 濃いグレー（ほぼ黒） */
   user-select: none;
-  background-color: #f0f0f0;
 }
-.puzzle-tile.empty {
-  background-color: transparent;
-  cursor: default;
+
+/* 空タイル（値が0のタイル）のスタイル */
+.tile.empty {
+  background-color: #e0e0e0; /* 薄いグレー */
+  /* 空タイルに数字は表示しないので、色指定は不要 */
+}
+
+/* モバイル端末でも押しやすいよう余白を確保 */
+.tile {
+  width: 60px;
+  height: 60px;
+}
+
+@media (max-width: 480px) {
+  /* スマホや小さめスクリーンではタイルを少し小さく */
+  .tile {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
 }
 </style>
