@@ -1,7 +1,12 @@
-Vue 3 + Vite + TypeScript を用いたパズルスライダーのコンポーネント構成案とApp.vueひな形例
-Vue 3 + Vite + TypeScript を用いたパズルスライダー（15パズルなど）の基本的なコンポーネント構成案と、App.vue のひな形例を示します。目的はスライダーゲームの盤面（タイル配置）、操作ボタン（リセットやシャッフル）、状態管理ロジックを分離し、可読性と拡張性を保つことです。
+# Vue 3 + Vite + TypeScript を用いたパズルスライダーのコンポーネント構成案と App.vue ひな形例
 
-1. ディレクトリ構成例
+Vue 3 + Vite + TypeScript を用いたパズルスライダー（15パズルなど）の基本的なコンポーネント構成案と、`App.vue` のひな形例を示します。目的はスライダー形式のパズルアプリを効率よく構築することです。
+
+---
+
+## 1. ディレクトリ構成例
+
+```
 pazurusuraidaa/
 ├── public/
 │   └── index.html
@@ -12,7 +17,7 @@ pazurusuraidaa/
 │   │   ├── PuzzleTile.vue       # 1マス分のタイルを表現
 │   │   └── PuzzleControls.vue   # 「シャッフル」「リセット」など操作パネル
 │   ├── composables/
-│   │   └── usePuzzle.ts         # パズルの状態管理・ロジック（composition API のフック）
+│   │   └── usePuzzle.ts         # パズルの状態管理・ロジック（composables API のフック）
 │   ├── types/
 │   │   └── index.ts             # 型定義（たとえばタイル位置など）
 │   ├── App.vue                  # ルートコンポーネント
@@ -21,23 +26,32 @@ pazurusuraidaa/
 ├── tsconfig.json
 ├── vite.config.ts
 └── package.json
-components/ 以下
+```
 
-PuzzleBoard.vue → 盤面全体を描画し、タイルを並べるコンポーネント
-PuzzleTile.vue → 個々のタイルを表示。クリック時に移動可能かどうか判定は親に委譲
-PuzzleControls.vue → 「シャッフル」「リセット」「サイズ変更（オプション）」などの操作ボタン一式
-composables/usePuzzle.ts
-Composition API＋TypeScript でパズルの状態（タイルの並び、空マスの位置、スライド可能判定など）を管理するフックファイル。
-これを取り込むことで、PuzzleBoard.vue から状態を参照・更新したり、App.vue から「シャッフル」命令を発行したりできる。
+### components/ 以下の説明
 
-types/index.ts
+- **PuzzleBoard.vue**  
+  盤面全体を描画し、タイルを並べるコンポーネント
+- **PuzzleTile.vue**  
+  個々のタイルを表示。クリック時に移動可能かどうか判定は親に委譲
+- **PuzzleControls.vue**  
+  「シャッフル」「リセット」「サイズ変更（オプション）」などの操作ボタン一式
+
+### composables/usePuzzle.ts
+
+Composition API＋TypeScript でパズルの状態（タイルの並び、空マスの位置、スライド可能判定など）を管理するフックファイル。これを取り込むことで、`PuzzleBoard.vue` から状態を参照・更新したり、`App.vue` から「シャッフル」命令を発行したりできます。
+
+### types/index.ts
+
 Tile や Position といったインターフェース／型定義をまとめる。
 
-2. 型定義例（src/types/index.ts）
+---
+
+## 2. 型定義例（src/types/index.ts）
+
 まずは、タイルや盤面サイズなどを定義する型を準備します。
 
-TypeScript
-
+```typescript
 // src/types/index.ts
 
 /** 1つのタイルを表す型 */
@@ -55,11 +69,15 @@ export type BoardSize = 3 | 4 | 5; // 必要に応じて拡張
 
 /** タイル移動可能判定のための方向 */
 export type Direction = "up" | "down" | "left" | "right";
-3. パズルの状態管理 Composable（src/composables/usePuzzle.ts）
+```
+
+---
+
+## 3. パズルの状態管理 Composable（src/composables/usePuzzle.ts）
+
 Composition API を用いて、盤面のタイル配列や操作ロジックを切り出します。これでどのコンポーネントからも同じ状態を使えるようになります。
 
-TypeScript
-
+```typescript
 // src/composables/usePuzzle.ts
 import { ref, computed } from "vue";
 import type { Tile, BoardSize, Direction } from "@/types";
@@ -127,7 +145,7 @@ export function usePuzzle(size: BoardSize = 4) {
       for (let j = i + 1; j < flat.length; j++) {
         if (flat[i] > flat[j]) inversions++;
       }
-      }
+    }
     // 盤面が偶数サイズの場合、空マスの行番号（下から数えて何行目か）も考慮
     if (size % 2 === 0) {
       // 空マスの現在のインデックス
@@ -191,17 +209,22 @@ export function usePuzzle(size: BoardSize = 4) {
     isSolved,
   };
 }
-ポイント
+```
 
-タイルは Tile 型で { value: number; row: number; col: number } を保持。値が 0 のものを空マスとする。
-initTiles() で初期配置を作り、shuffleTiles() で可解性を担保したシャッフルを実行。
-moveTile() でクリックしたタイルが空マスと隣接していればスワップ。
-isSolved は完成判定用の computed プロパティ。
-4. タイルコンポーネント（src/components/PuzzleTile.vue）
+### ポイント
+
+- タイルは Tile 型で `{ value: number; row: number; col: number }` を保持。値が 0 のものを空マスとする。
+- `initTiles()` で初期配置を作り、`shuffleTiles()` で可解性を担保したシャッフルを実行。
+- `moveTile()` でクリックしたタイルが空マスと隣接していればスワップ。
+- `isSolved` は完成判定用の computed プロパティ。
+
+---
+
+## 4. タイルコンポーネント（src/components/PuzzleTile.vue）
+
 1マスに相当するタイルを押下可能にし、表示・簡易スタイルを提供します。
 
-コード スニペット
-
+```vue
 <template>
   <div
     class="puzzle-tile"
@@ -248,15 +271,20 @@ function onClick() {
   cursor: default;
 }
 </style>
-ポイント
+```
 
-tile.value === 0 のときは「空マス」として何も表示せず、クリック無効化。
-クリックがあったら親（PuzzleBoard.vue）へ click-tile イベントを発行。
-5. 盤面コンポーネント（src/components/PuzzleBoard.vue）
+### ポイント
+
+- `tile.value === 0` のときは「空マス」として何も表示せず、クリック無効化。
+- クリックがあったら親（PuzzleBoard.vue）へ `click-tile` イベントを発行。
+
+---
+
+## 5. 盤面コンポーネント（src/components/PuzzleBoard.vue）
+
 タイルをグリッド状に並べ、PuzzleTile を配置・クリックイベントを拾って usePuzzle の moveTile() を呼び出します。
 
-コード スニペット
-
+```vue
 <template>
   <div class="board-wrapper">
     <div
@@ -306,21 +334,26 @@ function handleTileClick(tile: typeof tiles.value[number]) {
   font-weight: bold;
 }
 </style>
-ポイント
+```
 
-usePuzzle() をインポートし、返ってきた tiles をループして PuzzleTile を配置。
-CSS グリッド（display: grid; grid-template-columns: repeat(size, 1fr)）で正方形グリッドを実現。
-クリア判定（isSolved）が真になったらメッセージを表示。
-6. 操作パネルコンポーネント（src/components/PuzzleControls.vue）
+### ポイント
+
+- usePuzzle() をインポートし、返ってきた tiles をループして PuzzleTile を配置。
+- CSS グリッドで正方形グリッドを実現。
+- クリア判定（isSolved）が真になったらメッセージを表示。
+
+---
+
+## 6. 操作パネルコンポーネント（src/components/PuzzleControls.vue）
+
 シャッフルやリセットボタンを配置し、親へイベントを伝達します。
 
-コード スニペット
-
+```vue
 <template>
   <div class="controls">
     <button @click="onShuffle">シャッフル</button>
     <button @click="onReset">リセット</button>
-    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -352,15 +385,20 @@ button {
   cursor: pointer;
 }
 </style>
-ポイント
+```
 
-ボタンをクリックすると親にイベントを飛ばすだけのシンプル構造。
-親コンポーネント（App.vue）はこれを拾って usePuzzle の shuffleTiles()／initTiles() を呼び出す。
-7. ルートコンポーネント（src/App.vue）
-上記３つのコンポーネントをまとめ、全体のレイアウトや操作フローを定義します。具体的には、PuzzleControls での命令を受けて usePuzzle のシャッフル／リセットを呼び出し、PuzzleBoard に現在のタイル配列を渡します。
+### ポイント
 
-コード スニペット
+- ボタンをクリックすると親にイベントを飛ばすだけのシンプル構造。
+- 親コンポーネント（App.vue）はこれを拾って usePuzzle の shuffleTiles()／initTiles() を呼び出す。
 
+---
+
+## 7. ルートコンポーネント（src/App.vue）
+
+上記３つのコンポーネントをまとめ、全体のレイアウトや操作フローを定義します。
+
+```vue
 <template>
   <div id="app">
     <h1>パズルスライダー</h1>
@@ -400,35 +438,50 @@ const { size, shuffleTiles, initTiles: resetBoard, isSolved } = usePuzzle(/* 任
   margin-top: 16px;
 }
 </style>
-ポイント
+```
 
-usePuzzle をここでも呼んで、PuzzleControls のイベントハンドラに直接メソッドを渡している（shuffleTiles、resetBoard）。
-PuzzleBoard は内部で別途 usePuzzle を呼び、同じ状態を共有する想定（Composition API の呼び出し元が異なっても同一モジュールを使っていればリアクティブに同期される）。
-盤面サイズやクリア状態を表示するステータスバーを追加し、ユーザーに進捗感を与える。
-8. main.ts（エントリポイント例）
-TypeScript
+### ポイント
 
+- usePuzzle をここでも呼んで、PuzzleControls のイベントハンドラに直接メソッドを渡している（shuffleTiles、resetBoard）。
+- PuzzleBoard は内部で別途 usePuzzle を呼び、同じ状態を共有する想定。
+- 盤面サイズやクリア状態を表示するステータスバーを追加。
+
+---
+
+## 8. main.ts（エントリポイント例）
+
+```typescript
 // src/main.ts
 import { createApp } from "vue";
 import App from "./App.vue";
 
 createApp(App).mount("#app");
-Vite の初期テンプレート通りです。tsconfig.json や vite.config.ts はプロジェクト初期化時にすでに生成されている想定です。
+```
 
-9. まとめと発展
-責務の分離
+Vite の初期テンプレート通りです。
 
-PuzzleTile.vue：1マスの描画とクリック検知
-PuzzleBoard.vue：タイル配列をグリッドでレンダリング＆クリックを親に伝搬
-PuzzleControls.vue：シャッフル・リセットなどの操作フローを一手に担う
-usePuzzle.ts：タイル配置ロジック、可解性チェック、移動アルゴリズム、完成判定を独立したモジュールに
-拡張性
+---
 
-盤面サイズやタイルの見た目（色・フォントなど）は CSS/Style を調整すれば簡単に対応可能。
-usePuzzle に BoardSize 型を引数で渡すことで、3×3～5×5 といった多様なサイズをサポートできる。
-「移動回数のカウント」「タイマー機能」「レベル選択」などを追加したい場合、usePuzzle に新たな state やメソッドを追加し、App.vue・Controls.vue から必要なデータを参照・操作すれば実装しやすい。
-TypeScript の利点
+## 9. まとめと発展
 
-Tile や BoardSize などの型を厳密に定義することで、移動ロジックやシャッフル時のバグを防ぎやすい。
-Composition API（usePuzzle）自体が TypeScript 対応なので、リファクタリング時の型チェックや補完が効きやすい。
-以上が、Vue 3 + Vite + TypeScript を用いてパズルスライダーを構築する際の典型的なコンポーネント構成案と、App.vue のひな形例です。この構成をベースに、UI デザインや機能追加（移動回数の表示、クリア判定後のアニメーションなど）を組み込むことで、自分好みの完成度の高いパズルスライダーを作ってみてください。
+### 責務の分離
+
+- `PuzzleTile.vue`：1マスの描画とクリック検知
+- `PuzzleBoard.vue`：タイル配列をグリッドでレンダリング＆クリックを親に伝搬
+- `PuzzleControls.vue`：シャッフル・リセットなどの操作フローを一手に担う
+- `usePuzzle.ts`：タイル配置ロジック、可解性チェック、移動アルゴリズム、完成判定を独立したモジュールに
+
+### 拡張性
+
+- 盤面サイズやタイルの見た目（色・フォントなど）は CSS/Style を調整すれば簡単に対応可能。
+- usePuzzle に BoardSize 型を引数で渡すことで、3×3～5×5 といった多様なサイズをサポートできる。
+- 「移動回数のカウント」「タイマー機能」「レベル選択」などを追加したい場合、usePuzzle に新たな state やメソッドを追加し、App.vue・Controls.vue から制御可能。
+
+### TypeScript の利点
+
+- Tile や BoardSize などの型を厳密に定義することで、移動ロジックやシャッフル時のバグを防ぎやすい。
+- Composition API（usePuzzle）自体が TypeScript 対応なので、リファクタリング時の型チェックや補完が効きやすい。
+
+---
+
+以上が、Vue 3 + Vite + TypeScript を用いてパズルスライダーを構築する際の典型的なコンポーネント構成案と、App.vue のひな形例です。この構成をベースに発展・改良が可能です。

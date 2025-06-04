@@ -7,12 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependency directories
 node_modules
+
+# Build outputs
 dist
 dist-ssr
-*.local
+.vite/
 
-# Editor directories and files
+# TypeScript → JavaScript のビルド出力
+src/**/*.js
+src/**/*.js.map
+
+# 環境変数ファイル
+.env
+.env.*.local
+
+# エディタ関連
 .vscode/*
 !.vscode/extensions.json
 .idea
