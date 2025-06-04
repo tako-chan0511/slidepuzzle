@@ -60,21 +60,23 @@ export function usePuzzle(size: BoardSize = 4) {
     tiles.value = arr;
   }
 
-  /** 複数／単一タイル移動 */
+  /**
+   * タイルをクリックしたときの移動処理
+   * → 同じ行／列に空マスがある場合、その間のすべてのタイルを空マス方向にシフトする
+   */
   function moveTile(tile: Tile) {
-    const emptyIdx = tiles.value.findIndex((t) => t.value === EMPTY_VALUE);
-    const emptyTile = tiles.value[emptyIdx];
-    const clickedIdx = tiles.value.findIndex(
-      (t) => t.row === tile.row && t.col === tile.col
-    );
+    const emptyTile = tiles.value.find((t) => t.value === EMPTY_VALUE)!;
+    const clickedTile = tile;
 
-    // 横一列に空マスがある場合
-    if (emptyTile.row === tile.row) {
-      const row = tile.row;
-      const cClicked = tile.col;
+    // 1) 横一列に空マスがある場合
+    if (emptyTile.row === clickedTile.row) {
+      const row = clickedTile.row;
+      const cClicked = clickedTile.col;
       const cEmpty = emptyTile.col;
-      const direction = cEmpty > cClicked ? 1 : -1;
-      const colsBetween = [];
+      const direction = cEmpty > cClicked ? 1 : -1; // +1: 右へ, -1: 左へ
+
+      // クリックタイルから空マスまでの「列番号」をすべて列挙
+      const colsBetween: number[] = [];
       for (
         let c = cClicked;
         direction === 1 ? c <= cEmpty : c >= cEmpty;
@@ -82,48 +84,71 @@ export function usePuzzle(size: BoardSize = 4) {
       ) {
         colsBetween.push(c);
       }
+
+      // 隣接している場合は従来どおり 1枚だけスワップ
       if (colsBetween.length <= 2) {
+        const idxEmpty = tiles.value.findIndex((t) => t.value === EMPTY_VALUE);
+        const idxClicked = tiles.value.findIndex(
+          (t) => t.row === row && t.col === cClicked
+        );
         tiles.value = tiles.value.map((t, i) => {
-          if (i === emptyIdx) return { ...tile, row: row, col: cEmpty };
-          if (i === clickedIdx) return { ...emptyTile, row: row, col: cClicked };
+          if (i === idxEmpty) return { ...clickedTile, row, col: cEmpty };
+          if (i === idxClicked) return { ...emptyTile, row, col: cClicked };
           return t;
         });
         return;
       }
-      const clickedValue = tile.value;
-      const newTiles = tiles.value.map((t) => ({ ...t }));
-      for (let idxCol = colsBetween.length - 1; idxCol >= 1; idxCol--) {
-        const fromCol = colsBetween[idxCol - 1];
-        const toCol = colsBetween[idxCol];
-        const fromIdx = newTiles.findIndex(
-          (t) => t.row === row && t.col === fromCol
-        );
-        newTiles[fromIdx].col = toCol;
-        newTiles[fromIdx].row = row;
+
+      // 複数タイルを一度にシフトする場合
+      // ────────────────────────────────────
+      // クリックタイル～空マスタイルまでのタイルをすべて取得
+      const movingTiles: Tile[] = [];
+      for (const col of colsBetween) {
+        const t = tiles.value.find((x) => x.row === row && x.col === col)!;
+        movingTiles.push({ ...t });
       }
-      const clickedTileIdx = newTiles.findIndex(
-        (t) => t.row === row && t.col === cClicked
-      );
-      newTiles[clickedTileIdx].value = EMPTY_VALUE;
-      const emptyNewIdx = newTiles.findIndex(
-        (t) => t.value === EMPTY_VALUE && t.row === row && t.col === cClicked
-      );
-      newTiles[emptyNewIdx] = {
-        value: clickedValue,
-        row: row,
-        col: cEmpty,
-      };
+
+      // クリックタイルの値を保存
+      const clickedValue = movingTiles[0].value;
+
+      // 値を右（または左）へシフト
+      for (let i = movingTiles.length - 1; i >= 1; i--) {
+        movingTiles[i].value = movingTiles[i - 1].value;
+      }
+      // クリックタイル位置には空マスをセット
+      movingTiles[0].value = EMPTY_VALUE;
+
+      // それぞれのタイルの行／列を更新
+      for (let i = 0; i < movingTiles.length; i++) {
+        movingTiles[i].row = row;
+        movingTiles[i].col = colsBetween[i];
+      }
+
+      // 空マス位置にクリックタイルの値をセット（最後のインデックスではすでに前のタイルの値が入っているので不要）
+      // ※前のループで movingTiles[last].value に元々前のタイルの値が入っているため、ここで clickedValue を重複して設定しない
+
+      // 変更後のタイル配置を反映
+      const newTiles = tiles.value.map((t) => ({ ...t }));
+      for (let i = 0; i < colsBetween.length; i++) {
+        const col = colsBetween[i];
+        const idxOriginal = newTiles.findIndex(
+          (x) => x.row === row && x.col === col
+        );
+        newTiles[idxOriginal] = { ...movingTiles[i] };
+      }
       tiles.value = newTiles;
       return;
     }
 
-    // 縦一列に空マスがある場合
-    if (emptyTile.col === tile.col) {
-      const col = tile.col;
-      const rClicked = tile.row;
+    // 2) 縦一列に空マスがある場合
+    if (emptyTile.col === clickedTile.col) {
+      const col = clickedTile.col;
+      const rClicked = clickedTile.row;
       const rEmpty = emptyTile.row;
-      const direction = rEmpty > rClicked ? 1 : -1;
-      const rowsBetween = [];
+      const direction = rEmpty > rClicked ? 1 : -1; // +1: 下へ, -1: 上へ
+
+      // クリックタイルから空マスまでの「行番号」をすべて列挙
+      const rowsBetween: number[] = [];
       for (
         let r = rClicked;
         direction === 1 ? r <= rEmpty : r >= rEmpty;
@@ -131,46 +156,66 @@ export function usePuzzle(size: BoardSize = 4) {
       ) {
         rowsBetween.push(r);
       }
+
+      // 隣接している場合は 1枚だけスワップ
       if (rowsBetween.length <= 2) {
+        const idxEmpty = tiles.value.findIndex((t) => t.value === EMPTY_VALUE);
+        const idxClicked = tiles.value.findIndex(
+          (t) => t.row === rClicked && t.col === col
+        );
         tiles.value = tiles.value.map((t, i) => {
-          if (i === emptyIdx) return { ...tile, row: rEmpty, col: col };
-          if (i === clickedIdx) return { ...emptyTile, row: rClicked, col: col };
+          if (i === idxEmpty) return { ...clickedTile, row: rEmpty, col };
+          if (i === idxClicked) return { ...emptyTile, row: rClicked, col };
           return t;
         });
         return;
       }
-      const clickedValue = tile.value;
-      const newTiles = tiles.value.map((t) => ({ ...t }));
-      for (let idxRow = rowsBetween.length - 1; idxRow >= 1; idxRow--) {
-        const fromRow = rowsBetween[idxRow - 1];
-        const toRow = rowsBetween[idxRow];
-        const fromIdx = newTiles.findIndex(
-          (t) => t.row === fromRow && t.col === col
-        );
-        newTiles[fromIdx].row = toRow;
-        newTiles[fromIdx].col = col;
+
+      // 複数タイルを一度にシフトする場合
+      // ────────────────────────────────────
+      // クリックタイル～空マスタイルまでのタイルをすべて取得
+      const movingTiles: Tile[] = [];
+      for (const row of rowsBetween) {
+        const t = tiles.value.find((x) => x.row === row && x.col === col)!;
+        movingTiles.push({ ...t });
       }
-      const clickedTileIdx = newTiles.findIndex(
-        (t) => t.row === rClicked && t.col === col
-      );
-      newTiles[clickedTileIdx].value = EMPTY_VALUE;
-      const emptyNewIdx = newTiles.findIndex(
-        (t) =>
-          t.value === EMPTY_VALUE && t.row === rClicked && t.col === col
-      );
-      newTiles[emptyNewIdx] = {
-        value: clickedValue,
-        row: rEmpty,
-        col: col,
-      };
+
+      // クリックタイルの値を保存
+      const clickedValue = movingTiles[0].value;
+
+      // 値を下（または上）へシフト
+      for (let i = movingTiles.length - 1; i >= 1; i--) {
+        movingTiles[i].value = movingTiles[i - 1].value;
+      }
+      // クリックタイル位置には空マスをセット
+      movingTiles[0].value = EMPTY_VALUE;
+
+      // それぞれのタイルの行／列を更新
+      for (let i = 0; i < movingTiles.length; i++) {
+        movingTiles[i].row = rowsBetween[i];
+        movingTiles[i].col = col;
+      }
+
+      // 空マス位置にクリックタイルの値をセット（不要な重複代入を省略）
+
+      // 変更後のタイル配置を反映
+      const newTiles = tiles.value.map((t) => ({ ...t }));
+      for (let i = 0; i < rowsBetween.length; i++) {
+        const row = rowsBetween[i];
+        const idxOriginal = newTiles.findIndex(
+          (x) => x.row === row && x.col === col
+        );
+        newTiles[idxOriginal] = { ...movingTiles[i] };
+      }
       tiles.value = newTiles;
       return;
     }
 
-    // 移動不可
+    // 3) それ以外（斜め or 離れている）場合は移動不可
     return;
   }
 
+  /** 完成判定 */
   const isSolved = computed(() => {
     for (let i = 0; i < tiles.value.length - 1; i++) {
       if (tiles.value[i].value !== i + 1) return false;
@@ -178,16 +223,15 @@ export function usePuzzle(size: BoardSize = 4) {
     return tiles.value[tiles.value.length - 1].value === EMPTY_VALUE;
   });
 
-  // 初期化を呼ぶ
+  // 初期化
   initTiles();
 
-  // 返り値に initTiles を含める
   return {
     size,
     tiles,
     shuffleTiles,
     moveTile,
     isSolved,
-    initTiles
+    initTiles,
   };
 }
