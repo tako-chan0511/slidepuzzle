@@ -4,8 +4,8 @@
     <div
       class="board-grid"
       :style="{
-        gridTemplateColumns: `repeat(${size}, 1fr)`,
-        gridTemplateRows: `repeat(${size}, 1fr)`,
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gridTemplateRows: `repeat(${rows}, 1fr)`,
       }"
     >
       <PuzzleTile
@@ -24,15 +24,14 @@ import { defineProps } from "vue";
 import PuzzleTile from "./PuzzleTile.vue";
 import type { Tile } from "@/types";
 
-// Props の型を定義
 const props = defineProps<{
-  size: number;
+  rows: number;
+  cols: number;
   tiles: Tile[];
   moveTile: (tile: Tile) => void;
   isSolved: boolean;
 }>();
 
-/** タイル押下時 は props.moveTile を呼ぶ */
 function handleTileClick(tile: Tile) {
   props.moveTile(tile);
 }
