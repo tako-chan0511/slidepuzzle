@@ -1,1 +1,1 @@
-{"root":["./src/main.ts","./src/shims-vue.d.ts","./src/vite-env.d.ts","./src/composables/usepuzzle.ts","./src/types/index.ts","./src/app.vue","./src/components/puzzleboard.vue","./src/components/puzzlecontrols.vue","./src/components/puzzletile.vue"],"errors":true,"version":"5.8.3"}
+{"root":["./src/main.ts","./src/shims-vue.d.ts","./src/vite-env.d.ts","./src/composables/usepuzzle.ts","./src/types/index.ts","./src/app.vue","./src/components/puzzleboard.vue","./src/components/puzzlecontrols.vue","./src/components/puzzletile.vue"],"version":"5.8.3"}

@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
-    "types": ["vite/client", "node"]
+    "paths": { "@/*": ["src/*"] },
+    "types": ["vite/client", "node"],
+
+    // ここを追加：
+    "noEmit": true
   },
   "include": [
     "src/**/*.ts",
