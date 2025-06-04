@@ -20,15 +20,21 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { defineProps } from "vue";
 import PuzzleTile from "./PuzzleTile.vue";
-import { usePuzzle } from "@/composables/usePuzzle";
+import type { Tile } from "@/types";
 
-const { size, tiles, moveTile, isSolved } = usePuzzle(/* デフォルト 4 */);
+// Props の型を定義
+const props = defineProps<{
+  size: number;
+  tiles: Tile[];
+  moveTile: (tile: Tile) => void;
+  isSolved: boolean;
+}>();
 
-/** タイル押下時 */
-function handleTileClick(tile: typeof tiles.value[number]) {
-  moveTile(tile);
+/** タイル押下時 は props.moveTile を呼ぶ */
+function handleTileClick(tile: Tile) {
+  props.moveTile(tile);
 }
 </script>
 

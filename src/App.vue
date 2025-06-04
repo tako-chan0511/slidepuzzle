@@ -3,16 +3,21 @@
   <div id="app">
     <h1>パズルスライダー</h1>
 
-    <!-- 操作パネル -->
+    <!-- 操作パネルに shuffle/reset のメソッドを渡す -->
     <PuzzleControls
       @shuffle-requested="shuffleTiles"
       @reset-requested="resetBoard"
     />
 
-    <!-- 盤面 -->
-    <PuzzleBoard />
+    <!-- 盤面には tiles, size, moveTile, isSolved を渡す -->
+    <PuzzleBoard
+      :size="size"
+      :tiles="tiles"
+      :moveTile="moveTile"
+      :isSolved="isSolved"
+    />
 
-    <!-- 任意：クリア後に表示するメッセージや統計情報 -->
+    <!-- クリアメッセージ -->
     <div class="status-bar">
       <p>盤面サイズ：{{ size }} × {{ size }}</p>
       <p v-if="isSolved">おめでとう！ 完成しました。</p>
@@ -25,8 +30,9 @@ import { usePuzzle } from "@/composables/usePuzzle";
 import PuzzleControls from "@/components/PuzzleControls.vue";
 import PuzzleBoard from "@/components/PuzzleBoard.vue";
 
-/** usePuzzle を App.vue でも使うことで操作パネルとの連携を確実にする */
-const { size, shuffleTiles, initTiles: resetBoard, isSolved } = usePuzzle(/* 任意でサイズを渡せる */);
+// ここで１回だけ usePuzzle を呼び出し、同じ状態を子コンポーネントに渡す
+const { size, tiles, shuffleTiles, initTiles: resetBoard, moveTile, isSolved } =
+  usePuzzle(/* デフォルトサイズ 4 */);
 </script>
 
 <style>
