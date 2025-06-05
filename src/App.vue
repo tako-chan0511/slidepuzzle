@@ -1,7 +1,7 @@
 <!-- src/App.vue -->
 <template>
   <div id="app">
-    <h1>パズルスライダー</h1>
+    <h1>パズルスライダーＮ×Ｍ</h1>
 
     <!-- サイズ設定フォーム -->
     <div class="size-form">
