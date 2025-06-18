@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/slidepuzzle/dev-sw.js?dev-sw', { scope: '/slidepuzzle/', type: 'classic' })
